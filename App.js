@@ -7,7 +7,7 @@
  */
 
 import type {Node} from 'react';
-import React from 'react';
+import React, {useState} from 'react';
 import {
   Button,
   SafeAreaView,
@@ -67,11 +67,15 @@ const App: () => Node = () => {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const {data, loading, refetch, fetchMore, networkStatus} = useQuery(QUERY, {
+  const [page, setPage] = useState(1);
+  const {data} = useQuery(QUERY, {
     variables: {
-      page: 1,
+      page,
       perPage: 10,
     },
+    fetchPolicy: 'cache-and-network',
+    nextFetchPolicy: 'cache-only',
+    skip: page < 5,
   });
 
   return (
@@ -80,28 +84,7 @@ const App: () => Node = () => {
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         style={backgroundStyle}>
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Text>{loading ? 'Loading...' : 'Not Loading'}</Text>
-          <Text>
-            {'Network status: '}
-            {networkStatus}
-          </Text>
-        </View>
-        <Button title={'Refetch'} onPress={() => refetch()} />
-        <Button
-          title={'FetchMore'}
-          onPress={
-            data?.Page?.pageInfo?.hasNextPage
-              ? () =>
-                  fetchMore({
-                    variables: {
-                      page: data?.Page?.pageInfo?.currentPage + 1,
-                      perPage: 10,
-                    },
-                  })
-              : undefined
-          }
-        />
+        <Button title={`Next Page (current is ${page})`} onPress={() => setPage(page + 1)} />
         <View>
           {data?.Page?.media?.map(m => (
             <Text key={m.id}>{m.id}</Text>
